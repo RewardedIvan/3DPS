@@ -13,7 +13,7 @@ whas upp???
 \> Content-Type: application/x-www-form-urlencoded  
 \># URL Encoded Forms data:  
 \> name = "self explanatory"  
-\> author = "why not make an account system"
+\> author = "why not make an account system"  
 \> difficulty = "0-5"  
 \> data = `{"name":"normally the limit is 24 chars","author":"same here","difficulty":0,"songId":0-21,"songStartTime":0-songlength,"floorId":0-3,"backgroundId":0-2,"startingColor":[red,green,blue],"levelData":[#Level data],"pathData":[#Path Data],"cameraData":[#Camera Data]}` 
 
