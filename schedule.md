@@ -1,5 +1,5 @@
 # "TODO"
-1. [ ] Adding FAQ to the wiki
+1. [x] Adding FAQ to the wiki
 2. [ ] Making the hacking page in the wiki
 3. [ ] Going outside
 4. [ ] TLS/SSL actually working
