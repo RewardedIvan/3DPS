@@ -6,7 +6,7 @@ whas upp???
   
 
 ### Every request is sent to http://delugedrop.com/3Dash/whatever with http v1 and your favorite *certified by robtop* php security
-### Also his servers are down 😂
+### Also his servers are down 😂 R.I.P Garbage PHP at http://delugedrop.com/3Dash/
 
 # findings lmao
 ## POST A Level
