@@ -144,10 +144,11 @@ private IEnumerator SetRequest(string uri, string levelName, string levelAuthor,
 # Security
 ## Vuln i probably foudn
 ok so can i just create mitm proxy, and do something evil 
-![big brain](https://en.forum.tribalwars2.com/data/avatars/o/5/5424.jpg?1598231572)
+![sanitizing user input for the better](https://i.imgur.com/cmp3z6z.png)  
+
 ## Havent tested, but
 since no server protec i can attac and make ***IMPOSSIBLE*** lvl
-![sanitizing user input for the better](https://i.imgur.com/cmp3z6z.png)
+![IMPOSSIBLE](https://i.imgur.com/SdpRUe8.png)
 
 ## New Absolute for 3Dash????
 Ummm, i think yeah unless he kills my work
