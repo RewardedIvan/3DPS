@@ -1,5 +1,6 @@
 # Yoooo
 whas upp??? 
+check de [wiki](https://github.com/RewardedIvan/3DPS/wiki/Home-or-TOC) if you are here for yo first time
 ![dog](https://imgs.search.brave.com/h6cXzBdjQLJeVel33pPYteS4IduQxcniXfQM1G_1dME/rs:fit:1200:720:1/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS95/UXBKdnBjSlR1by9t/YXhyZXNkZWZhdWx0/LmpwZw)
 ###### The ceiling
 ### Jokes out the way.....
