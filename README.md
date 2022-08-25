@@ -21,17 +21,17 @@ whas upp???
 ## GET Recent Levels
 ```csharp
 private void PopulateRecentLevels(string data)
+{
+	string[] array = data.Split("\n", StringSplitOptions.None);
+	for (int i = 0; i < array.Length; i += 4)
 	{
-		string[] array = data.Split("\n", StringSplitOptions.None);
-		for (int i = 0; i < array.Length; i += 4)
-		{
-			int id = int.Parse(array[i]);
-			string levelName = array[i + 1];
-			string author = array[i + 2];
-			int difficulty = int.Parse(array[i + 3]);
-			this.AddButton(this.recentContent, id, levelName, author, difficulty);
-		}
+		int id = int.Parse(array[i]);
+		string levelName = array[i + 1];
+		string author = array[i + 2];
+		int difficulty = int.Parse(array[i + 3]);
+		this.AddButton(this.recentContent, id, levelName, author, difficulty);
 	}
+}
 ```
 \> **GET** /get_recent.php  
 < Level ID  
