@@ -16,6 +16,6 @@ The docker build failed with `Failed to connect to docker socket`
 2. Get the error message
 
 **I'm sure that**
-- [ ] I have checked the FAQ
+- [ ] I have checked the [FAQ](https://github.com/RewardedIvan/3DPS/wiki/FAQ)
 - [ ] No other issue, that has been closed has your problem
 If your not sure, your issue **will** be closed.

@@ -32,6 +32,6 @@ Add any other context about the problem here.
 
 **I'm sure that**
 - [ ] I have checked the FAQ
-- [ ] No other issue, that has been closed has your bug or check the [schedule](https://github.com/RewardedIvan/3DPS/blob/master/schedule.md)
+- [ ] No other issue, that has been closed has your bug or check the [schedule](https://github.com/RewardedIvan/3DPS/blob/master/schedule.md), or if there is a bug not scheduled, please like it so I can see it
 - [ ] There is no other solution
 Again again, if your not sure your issue **will** be closed
