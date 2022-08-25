@@ -1,2 +1,6 @@
+github.com/bnclabs/gson v0.0.0-20210409011557-2e73bae93c0b h1:q+ZRwu5dIkHn2kQKKm5ZFTHd0U+7MxrnZCsWyvOO8FA=
+github.com/bnclabs/gson v0.0.0-20210409011557-2e73bae93c0b/go.mod h1:LQV/obTykUoQNxXVuLwyRNdeJcn32JNSWVG3/Ncxx/g=
 github.com/mattn/go-sqlite3 v1.14.15 h1:vfoHhTN1af61xCRSWzFIWzx2YskyMTwHLrExkBOjvxI=
 github.com/mattn/go-sqlite3 v1.14.15/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
+golang.org/x/text v0.3.7 h1:olpwvP2KacW1ZWvsR7uQhoyTYvKAupfQrRGBFM352Gk=
+golang.org/x/text v0.3.7/go.mod h1:u+2+/6zg+i71rQMx5EYifcz6MCKuco9NR6JIITiCfzQ=

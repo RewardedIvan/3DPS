@@ -16,12 +16,27 @@ whas upp???
 \> name = "self explanatory"  
 \> author = "why not make an account system"  
 \> difficulty = "0-5"  
-\> data = `{"name":"normally the limit is 24 chars","author":"same here","difficulty":0,"songId":0-21,"songStartTime":0-songlength,"floorId":0-3,"backgroundId":0-2,"startingColor":[red,green,blue],"levelData":[#Level data],"pathData":[#Path Data],"cameraData":[#Camera Data]}` 
+\> data = `{"name":"normally the limit is 24 chars","author":"same here","difficulty":0-5,"songId":0-21,"songStartTime":0-songlength,"floorId":0-3,"backgroundId":0-2,"startingColor":[red,green,blue],"levelData":[#Level data],"pathData":[#Path Data],"cameraData":[#Camera Data]}` 
 
 ## GET Recent Levels
+```csharp
+private void PopulateRecentLevels(string data)
+	{
+		string[] array = data.Split("\n", StringSplitOptions.None);
+		for (int i = 0; i < array.Length; i += 4)
+		{
+			int id = int.Parse(array[i]);
+			string levelName = array[i + 1];
+			string author = array[i + 2];
+			int difficulty = int.Parse(array[i + 3]);
+			this.AddButton(this.recentContent, id, levelName, author, difficulty);
+		}
+	}
+```
 \> **GET** /get_recent.php  
 < Level ID  
 < Level Name  
+< Level Author  
 < Level Difficulty  
 < Repeat.............  
 

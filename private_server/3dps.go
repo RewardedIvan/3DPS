@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,6 +11,45 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
+type Data struct {
+	Name          string
+	Author        string
+	Difficulty    uint8
+	SongID        uint8
+	SongStartTime int
+	FloorID       uint8
+	BackgroundID  uint8
+	StartingColor [3]uint8
+	LevelData     []int
+	PathData      []int
+	CameraData    []int
+}
+
+var EmptyData = Data{Name: "", Author: "", Difficulty: 0, SongID: 0, SongStartTime: 0, FloorID: 0, BackgroundID: 0, StartingColor: [3]uint8{0, 0, 0}, LevelData: []int{}, PathData: []int{}, CameraData: []int{}}
+var LID int64
+
+func QLID() int64 {
+	database, err := sql.Open("sqlite3", "./levels.db")
+	if err != nil {
+		log.Fatal("db: ", err)
+	}
+	rows, erro := database.Query("select id from levels")
+	var lid int64
+	for rows.Next() {
+		error := rows.Scan(&lid)
+		if error != nil {
+			log.Fatal("Query lid: ", erro)
+		}
+	}
+
+	if erro != nil {
+		log.Fatal("Query", erro)
+	}
+
+	database.Close()
+	return lid
+}
 
 func QRDB(Query string) *sql.Row {
 	database, err := sql.Open("sqlite3", "./levels.db")
@@ -36,33 +76,23 @@ func QDB(Query string) *sql.Rows {
 	return rows
 }
 
-func EDB(Exec string, V1 int64, V2 string) int64 {
+func EDB(Exec string, V1 int64, V2 string) bool {
 	database, err := sql.Open("sqlite3", "./levels.db")
 	if err != nil {
 		log.Fatal("db: ", err)
 	}
-	res, erro := database.Exec(Exec, V1, V2)
-	affect, _ := res.RowsAffected()
+	_, erro := database.Exec(Exec, V1, V2)
 
 	if erro != nil {
-		log.Fatal("Exec", erro)
+		if erro.Error() == "UNIQUE constraint failed: levels.data" {
+			return false
+		} else {
+			log.Fatal("Exec", erro)
+		}
 	}
 
 	database.Close()
-	return affect
-}
-
-func LID() int64 {
-	database, err := sql.Open("sqlite3", "./levels.db")
-	if err != nil {
-		log.Fatal("db: ", err)
-	}
-
-	r, _ := database.Exec("")
-	lid, _ := r.LastInsertId()
-
-	database.Close()
-	return lid
+	return true
 }
 
 func hewo(w http.ResponseWriter, r *http.Request) {
@@ -93,6 +123,24 @@ func getLevel(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(data))
 }
 
+func ReverseLines(str string) string {
+	lines := strings.Split(str, "\n")
+	var ret string
+
+	for i, j := 0, len(lines)-1; i < j; i, j = i+1, j-1 {
+		lines[i], lines[j] = lines[j], lines[i]
+	}
+
+	for i := range lines {
+		if i == len(lines)-1 {
+			ret += lines[i]
+		} else {
+			ret += lines[i] + "\n"
+		}
+	}
+	return ret
+}
+
 func postLevel(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != "application/x-www-form-urlencoded" {
 		w.WriteHeader(http.StatusUnsupportedMediaType)
@@ -103,37 +151,59 @@ func postLevel(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if !strings.HasPrefix(r.Form["data"][0], "{") && !strings.HasSuffix(r.Form["data"][0], "}") {
-		//this only checks if its actually a json object, nothing else is checked... Sadly
+	// Shit gets checked for valid JSON
+	if !json.Valid([]byte(r.Form["data"][0])) {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	// Shit gets checked on steroids
+	var UD Data // Unmarshalled Data
+	err := json.Unmarshal([]byte(r.Form["data"][0]), &UD)
+	if recover() != nil || err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	EDB("INSERT INTO levels VALUES (?, ?)", LID()+int64(1), r.Form["data"][0])
-	w.Write([]byte(strconv.FormatInt(LID()+1, 10)))
-	// Still not stable, should improve this later... TODO
+	if !EDB("INSERT INTO levels VALUES (?, ?)", LID+1, r.Form["data"][0]) {
+		w.WriteHeader(420) //SPAM
+		return
+	}
+	// Kinda stable, if you get an error message, go report it as a bug... Please check the FAQ first
+	LID++
+	w.Write([]byte(fmt.Sprint(LID)))
 }
 
 func getRecents(w http.ResponseWriter, r *http.Request) {
-	rows := QDB("SELECT data FROM levels")
+	rows := QDB("SELECT * FROM levels ORDER BY id DESC")
 
-	//TODO
+	var result string
 
-	//var result string
-	var i int64 = 0
-	for rows.Next() {
-		if LID() == i || i == 10 {
+	for i := 0; i < 10; i++ { // Specify the amount of recents you want to see
+		if rows.Next() {
+			var id int64
+			var data string
+			var unmarshalleddata Data
+			err := rows.Scan(&id, &data)
+			if err != nil {
+				continue
+			}
+			if !json.Valid([]byte(data)) {
+				continue
+			}
+			erro := json.Unmarshal([]byte(data), &unmarshalleddata)
+			if erro != nil {
+				continue
+			}
+
+			result += fmt.Sprint(id) + "\n"
+			result += unmarshalleddata.Name + "\n"
+			result += unmarshalleddata.Author + "\n"
+			result += fmt.Sprint(unmarshalleddata.Difficulty) + "\n"
+		} else {
 			break
 		}
-
-		var data string
-		rows.Scan(&data)
-		fmt.Println(data)
-
-		i++
 	}
-
-	//w.Write()
+	w.Write([]byte(result))
 }
 
 func main() {
@@ -142,6 +212,7 @@ func main() {
 	InitTable, _ := database.Prepare("CREATE TABLE IF NOT EXISTS levels(id integer primary key autoincrement, data longtext unique)")
 	InitTable.Exec()
 	database.Close()
+	LID = QLID()
 	if erro != nil {
 		log.Fatal("db: ", erro)
 		panic(erro)
@@ -162,3 +233,5 @@ func main() {
 		log.Fatal("ListenAndServeTLS: ", error)
 	}
 }
+
+// Whoever reads this, just know I am new to golang, some how made a personal record for the best project

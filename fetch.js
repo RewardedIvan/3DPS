@@ -37,5 +37,18 @@ function pushLevel(formdata) {
 
 //getLevel(5744).then(res => res.json().then(json => fs.writeFileSync('./a.json', JSON.stringify(json, 0, 4)))); //5692
 //getRecent().then(res => res.text().then(text => console.log(text)));
-pushLevel({"name": "If not the first IMPOSSIBLE level in 3Dash", "author": "Proudly, RewardedIvan", "difficulty": 5, "data": JSON.stringify(JSON.parse(fs.readFileSync("./lvl.json")))}).then(res => res.text().then(text => console.log(text)));
+//pushLevel({"name": "If not the first IMPOSSIBLE level in 3Dash", "author": "Proudly, RewardedIvan", "difficulty": 5, "data": JSON.stringify(JSON.parse(fs.readFileSync("./lvl.json")))}).then(res => res.text().then(text => console.log(text)));
 // Once again, some spaghetti code for fetching online levels and posting
+
+// How bout you archive the whole server, btw you cant lmao cuz he deleted his shit for some reason???
+var errors = 0
+var i;
+fs.mkdirSync("./lvlarchive")
+while (errors => 3) {
+    var lvl = getLevel(i++);
+    if (lvl == "") {
+        errors++;
+        continue
+    }
+    lvl.then(res => res.json().then(json => fs.writeFileSync(`./lvlarchive/${i}`, JSON.stringify(json), {encoding: "utf-8"}))); 
+}

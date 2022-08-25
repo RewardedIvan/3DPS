@@ -1,0 +1,13 @@
+{
+    "name": "string",
+    "author": "string",
+    "difficulty": "0-5",
+    "songId": "0-21",
+    "songStartTime": "int",
+    "floorId": "0-2",
+    "backgroundId": "0-3",
+    "startingColor": "int[3]",
+    "levelData": "int[]",
+    "pathData": "int[]",
+    "cameraData": "int[]"
+}
