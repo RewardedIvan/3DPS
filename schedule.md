@@ -1,8 +1,8 @@
 # "TODO"
-1. [x] Adding FAQ to the wiki
-2. [x] Making the hacking page in the wiki
-3. [x] Going outside
-4. [ ] TLS/SSL actually working
-5. [x] Fix garbage sqlite3 implementation NOT TRUE
-6. [x] POSTing a level actually working every time may work lmao
-7. [x] To THE RECENT TAB
+- [x] Adding FAQ to the wiki
+- [x] Making the hacking page in the wiki
+- [x] Going outside
+- [ ] TLS/SSL actually working
+- [x] Fix garbage sqlite3 implementation NOT TRUE
+- [x] https://github.com/RewardedIvan/3DPS/issues/1 POSTing a level actually working every time  
+- [x] To THE RECENT TAB
