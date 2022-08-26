@@ -5,4 +5,5 @@ go run 3dps.go
 go mod init github.com/RewardedIvan/3DPS
 go mod tidy
 go install github.com/mattn/go-sqlite3@latest
-go run 3dps.go
+go build 3dps.go
+./3dps
