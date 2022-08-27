@@ -1,4 +1,8 @@
 const fs = require('fs');
+const sqlite3 = require('sqlite3');
+const moment = require('moment');
+const db = new sqlite3.Database(`./archive_${moment().format("MMMM[-]Do[-]YYYY[_]h:mm:ss_A")}.sqlite`);
+
 function urlencodedForm(details) {
     var fd = new FormData();
     for (let property in details) {
@@ -14,7 +18,7 @@ function urlencodedForm(details) {
     return s;
 }
 
-function getLevel(id) {
+async function getLevel(id) {
     var formBody = urlencodedForm({
         'id': id
     });
@@ -41,7 +45,7 @@ function pushLevel(formdata) {
 // Once again, some spaghetti code for fetching online levels and posting
 
 // How bout you archive the whole server, btw you cant lmao cuz he deleted his shit for some reason???
-var errors = 0
+/*var errors = 0
 var i;
 fs.mkdirSync("./lvlarchive")
 while (errors => 3) {
@@ -51,4 +55,22 @@ while (errors => 3) {
         continue
     }
     lvl.then(res => res.json().then(json => fs.writeFileSync(`./lvlarchive/${i}`, JSON.stringify(json), {encoding: "utf-8"}))); 
-}
+}*/
+db.serialize(async () => {
+    db.run("CREATE TABLE IF NOT EXISTS levels(id integer primary key autoincrement, data longtext)");
+    var errors = 0;
+    var id = 0;
+    while (errors => 3) {
+        if (id % 2000 == 0) {
+            console.log(id)
+        }
+        var lvl;
+        try {
+            lvl = await getLevel(id++).then(res => res.json().then(json => { return json }));
+        } catch {
+            errors++;
+            continue
+        }
+        db.run("INSERT INTO levels VALUES (?, ?)", id-1, JSON.stringify(lvl));
+    }
+}, () => {db.close()})
