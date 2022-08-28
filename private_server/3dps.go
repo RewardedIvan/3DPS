@@ -29,22 +29,26 @@ type Data struct {
 var EmptyData = Data{Name: "", Author: "", Difficulty: 0, SongID: 0, SongStartTime: 0, FloorID: 0, BackgroundID: 0, StartingColor: [3]uint8{0, 0, 0}, LevelData: []int{}, PathData: []int{}, CameraData: []int{}}
 var LID int64
 
+func check(err error, where string) bool {
+	if err != nil {
+                log.Fatal(where + ": ", err)
+		return false
+        }
+	return true
+}
+
 func QLID() int64 {
 	database, err := sql.Open("sqlite3", "./levels.db")
-	if err != nil {
-		log.Fatal("db: ", err)
-	}
-	rows, erro := database.Query("select id from levels")
+	check(err, "loading database")
+	err = nil
+	rows, err := database.Query("select id from levels")
+	check(err, "querying ids")
+	err = nil
 	var lid int64
 	for rows.Next() {
-		error := rows.Scan(&lid)
-		if error != nil {
-			log.Fatal("Query lid: ", erro)
-		}
-	}
-
-	if erro != nil {
-		log.Fatal("Query", erro)
+		err = rows.Scan(&lid)
+		check(err, "scanning id")
+		err = nil
 	}
 
 	database.Close()
@@ -53,9 +57,7 @@ func QLID() int64 {
 
 func QRDB(Query string) *sql.Row {
 	database, err := sql.Open("sqlite3", "./levels.db")
-	if err != nil {
-		log.Fatal("db: ", err)
-	}
+	check(err, "loading database")
 	row := database.QueryRow(Query)
 
 	database.Close()
@@ -64,13 +66,10 @@ func QRDB(Query string) *sql.Row {
 
 func QDB(Query string) *sql.Rows {
 	database, err := sql.Open("sqlite3", "./levels.db")
-	if err != nil {
-		log.Fatal("db: ", err)
-	}
-	rows, erro := database.Query(Query)
-	if erro != nil {
-		log.Fatal("Query", erro)
-	}
+	check(err, "loading database")
+	err = nil
+	rows, err := database.Query(Query)
+	check(err, "quering \"" + Query + "\"")
 
 	database.Close()
 	return rows
@@ -78,16 +77,15 @@ func QDB(Query string) *sql.Rows {
 
 func EDB(Exec string, V1 int64, V2 string) bool {
 	database, err := sql.Open("sqlite3", "./levels.db")
-	if err != nil {
-		log.Fatal("db: ", err)
-	}
-	_, erro := database.Exec(Exec, V1, V2)
+	check(err, "loading database")
+	err = nil
+	_, err := database.Exec(Exec, V1, V2)
 
-	if erro != nil {
-		if erro.Error() == "UNIQUE constraint failed: levels.data" {
+	if err != nil {
+		if err.Error() == "UNIQUE constraint failed: levels.data" {
 			return false
 		} else {
-			log.Fatal("Exec", erro)
+			log.Fatal("Exec", err)
 		}
 	}
 
@@ -111,8 +109,9 @@ func getLevel(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	if _, err := strconv.Atoi(r.Form["id"][0]); err != nil {
+	
+	_, err := strconv.Atoi(r.Form["id"][0])
+	if recover() != nil || err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -124,6 +123,7 @@ func getLevel(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReverseLines(str string) string {
+	// This is a mess lmao
 	lines := strings.Split(str, "\n")
 	var ret string
 
@@ -168,7 +168,7 @@ func postLevel(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(420) //SPAM
 		return
 	}
-	// Kinda stable, if you get an error message, go report it as a bug... Please check the FAQ first
+	// Kinda stable, if you get an error message, go report it as a bug... Please check the FAQ first. OFC check other issues and the schedule.md
 	LID++
 	w.Write([]byte(fmt.Sprint(LID)))
 }
@@ -178,7 +178,7 @@ func getRecents(w http.ResponseWriter, r *http.Request) {
 
 	var result string
 
-	for i := 0; i < 10; i++ { // Specify the amount of recents you want to see
+	for i := 0; i < 20; i++ { // Specify the amount of recents you want to see
 		if rows.Next() {
 			var id int64
 			var data string
@@ -190,8 +190,8 @@ func getRecents(w http.ResponseWriter, r *http.Request) {
 			if !json.Valid([]byte(data)) {
 				continue
 			}
-			erro := json.Unmarshal([]byte(data), &unmarshalleddata)
-			if erro != nil {
+			err = json.Unmarshal([]byte(data), &unmarshalleddata)
+			if err != nil {
 				continue
 			}
 
@@ -208,15 +208,15 @@ func getRecents(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	//# Database using sqlite3
-	database, erro := sql.Open("sqlite3", "./levels.db")
-	InitTable, _ := database.Prepare("CREATE TABLE IF NOT EXISTS levels(id integer primary key autoincrement, data longtext unique)")
+	database, err := sql.Open("sqlite3", "./levels.db")
+	check(err, "loading database")
+	err = nil
+	InitTable, err := database.Prepare("CREATE TABLE IF NOT EXISTS levels(id integer primary key autoincrement, data longtext unique)")
+	check(err, "creating levels' table")
+	err = nil
 	InitTable.Exec()
 	database.Close()
 	LID = QLID()
-	if erro != nil {
-		log.Fatal("db: ", erro)
-		panic(erro)
-	}
 
 	//# Routing
 	http.HandleFunc("/", hewo)
@@ -225,13 +225,11 @@ func main() {
 	http.HandleFunc("/level/publish", postLevel)
 
 	//# Listen And Serve
-	//error := http.ListenAndServeTLS(":9991", "TLS.crt", "TLS.key", nil)
 	//HTTPS is protection against man in the middle attacks, which will never happen, unless your in a public network AND someone is TARGETTING YOU
+	//err = http.ListenAndServeTLS(":9991", "TLS.crt", "TLS.key", nil)
+	err = http.ListenAndServe(":9991", nil)
 	fmt.Println("Now Serving...")
-	error := http.ListenAndServe(":9991", nil)
-	if error != nil {
-		log.Fatal("ListenAndServeTLS: ", error)
-	}
+	check(err, "listen n serving")
 }
 
 // Whoever reads this, just know I am new to golang, some how made a personal record for the best project
