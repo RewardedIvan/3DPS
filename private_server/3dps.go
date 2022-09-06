@@ -37,6 +37,8 @@ func check(err error, where string) bool {
 	return true
 }
 
+var database, dberr = sql.Open("sqlite3", "./levels.db")
+
 func QLID() int64 {
 	database, err := sql.Open("sqlite3", "./levels.db")
 	check(err, "loading database")
@@ -56,8 +58,6 @@ func QLID() int64 {
 }
 
 func QRDB(Query string) *sql.Row {
-	database, err := sql.Open("sqlite3", "./levels.db")
-	check(err, "loading database")
 	row := database.QueryRow(Query)
 
 	database.Close()
@@ -65,20 +65,13 @@ func QRDB(Query string) *sql.Row {
 }
 
 func QDB(Query string) *sql.Rows {
-	database, err := sql.Open("sqlite3", "./levels.db")
-	check(err, "loading database")
-	err = nil
 	rows, err := database.Query(Query)
 	check(err, "quering \"" + Query + "\"")
 
-	database.Close()
 	return rows
 }
 
 func EDB(Exec string, V1 int64, V2 string) bool {
-	database, err := sql.Open("sqlite3", "./levels.db")
-	check(err, "loading database")
-	err = nil
 	_, err := database.Exec(Exec, V1, V2)
 
 	if err != nil {
@@ -89,7 +82,6 @@ func EDB(Exec string, V1 int64, V2 string) bool {
 		}
 	}
 
-	database.Close()
 	return true
 }
 
@@ -208,15 +200,13 @@ func getRecents(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	//# Database using sqlite3
-	database, err := sql.Open("sqlite3", "./levels.db")
-	check(err, "loading database")
-	err = nil
+	check(dberr, "loading database")
 	InitTable, err := database.Prepare("CREATE TABLE IF NOT EXISTS levels(id integer primary key autoincrement, data blob unique)")
 	check(err, "creating levels' table")
 	err = nil
 	InitTable.Exec()
-	database.Close()
 	LID = QLID()
+	defer database.close()
 
 	//# Routing
 	http.HandleFunc("/", hewo)
@@ -225,11 +215,9 @@ func main() {
 	http.HandleFunc("/level/publish", postLevel)
 
 	//# Listen And Serve
+	fmt.Println("Listening and serving...")
 	//HTTPS is protection against man in the middle attacks, which will never happen, unless your in a public network AND someone is TARGETTING YOU
 	//err = http.ListenAndServeTLS(":9991", "TLS.crt", "TLS.key", nil)
 	err = http.ListenAndServe(":9991", nil)
-	fmt.Println("Now Serving...")
 	check(err, "listen n serving")
 }
-
-// Whoever reads this, just know I am new to golang, some how made a personal record for the best project
