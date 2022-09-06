@@ -211,7 +211,7 @@ func main() {
 	database, err := sql.Open("sqlite3", "./levels.db")
 	check(err, "loading database")
 	err = nil
-	InitTable, err := database.Prepare("CREATE TABLE IF NOT EXISTS levels(id integer primary key autoincrement, data longtext unique)")
+	InitTable, err := database.Prepare("CREATE TABLE IF NOT EXISTS levels(id integer primary key autoincrement, data blob unique)")
 	check(err, "creating levels' table")
 	err = nil
 	InitTable.Exec()
