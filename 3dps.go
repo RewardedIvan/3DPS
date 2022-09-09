@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -26,7 +25,6 @@ type Data struct {
 	CameraData    []int
 }
 
-var EmptyData = Data{Name: "", Author: "", Difficulty: 0, SongID: 0, SongStartTime: 0, FloorID: 0, BackgroundID: 0, StartingColor: [3]uint8{0, 0, 0}, LevelData: []int{}, PathData: []int{}, CameraData: []int{}}
 var LID int64
 
 func check(err error, where string) bool {
@@ -40,10 +38,7 @@ func check(err error, where string) bool {
 var database, dberr = sql.Open("sqlite3", "./levels.db")
 
 func QLID() int64 {
-	database, err := sql.Open("sqlite3", "./levels.db")
-	check(err, "loading database")
-	err = nil
-	rows, err := database.Query("select id from levels")
+	rows, err := database.Query("SELECT id FROM levels")
 	check(err, "querying ids")
 	err = nil
 	var lid int64
@@ -53,36 +48,7 @@ func QLID() int64 {
 		err = nil
 	}
 
-	database.Close()
 	return lid
-}
-
-func QRDB(Query string) *sql.Row {
-	row := database.QueryRow(Query)
-
-	database.Close()
-	return row
-}
-
-func QDB(Query string) *sql.Rows {
-	rows, err := database.Query(Query)
-	check(err, "quering \"" + Query + "\"")
-
-	return rows
-}
-
-func EDB(Exec string, V1 int64, V2 string) bool {
-	_, err := database.Exec(Exec, V1, V2)
-
-	if err != nil {
-		if err.Error() == "UNIQUE constraint failed: levels.data" {
-			return false
-		} else {
-			log.Fatal("Exec", err)
-		}
-	}
-
-	return true
 }
 
 func hewo(w http.ResponseWriter, r *http.Request) {
@@ -107,30 +73,11 @@ func getLevel(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	
 	var data string
-	row := QRDB("SELECT data FROM levels WHERE id = " + r.Form["id"][0])
+	row := database.QueryRow("SELECT data FROM levels WHERE id = " + r.Form["id"][0])
 	row.Scan(&data)
 	w.Write([]byte(data))
-}
-
-func ReverseLines(str string) string {
-	// This is a mess lmao
-	lines := strings.Split(str, "\n")
-	var ret string
-
-	for i, j := 0, len(lines)-1; i < j; i, j = i+1, j-1 {
-		lines[i], lines[j] = lines[j], lines[i]
-	}
-
-	for i := range lines {
-		if i == len(lines)-1 {
-			ret += lines[i]
-		} else {
-			ret += lines[i] + "\n"
-		}
-	}
-	return ret
 }
 
 func postLevel(w http.ResponseWriter, r *http.Request) {
@@ -148,17 +95,29 @@ func postLevel(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	// Shit gets checked on steroids
+	// Shit gets checked for a valid schema
 	var UD Data // Unmarshalled Data
 	err := json.Unmarshal([]byte(r.Form["data"][0]), &UD)
 	if recover() != nil || err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	if !EDB("INSERT INTO levels VALUES (?, ?)", LID+1, r.Form["data"][0]) {
-		w.WriteHeader(420) //SPAM
+	// Shit gets checked for acutal valid data
+	if (len(UD.Name) > 24 || len(UD.Author) > 24 || UD.SongID > 21 || UD.Difficulty > 5 || UD.FloorID > 3 || UD.BackgroundID > 2 || len(UD.Name) == 0 || len(UD.Author) == 0 || UD.SongID < 0 || UD.Difficulty < 0 || UD.FloorID < 0 || UD.BackgroundID < 0) { 
+		w.WriteHeader(http.StatusBadRequest)
 		return
+	}
+
+	err = nil
+	_, err = database.Exec("INSERT INTO levels VALUES(?, ?)", LID+1, r.Form["data"][0])
+	if err != nil {
+		if err.Error() == "UNIQUE constraint failed: levels.data" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		} else {
+			log.Fatal("Inserting level: ", err)
+			return
+		}
 	}
 	// Kinda stable, if you get an error message, go report it as a bug... Please check the FAQ first. OFC check other issues and the schedule.md
 	LID++
@@ -166,34 +125,32 @@ func postLevel(w http.ResponseWriter, r *http.Request) {
 }
 
 func getRecents(w http.ResponseWriter, r *http.Request) {
-	rows := QDB("SELECT * FROM levels ORDER BY id DESC")
+	rows, err := database.Query("SELECT * FROM levels ORDER BY id DESC LIMIT 20") // Specify the amount of recents you want to see
+	check(err, "quering recent levels")
+	err = nil
 
 	var result string
-
-	for i := 0; i < 20; i++ { // Specify the amount of recents you want to see
-		if rows.Next() {
-			var id int64
-			var data string
-			var unmarshalleddata Data
-			err := rows.Scan(&id, &data)
-			if err != nil {
-				continue
-			}
-			if !json.Valid([]byte(data)) {
-				continue
-			}
-			err = json.Unmarshal([]byte(data), &unmarshalleddata)
-			if err != nil {
-				continue
-			}
-
-			result += fmt.Sprint(id) + "\n"
-			result += unmarshalleddata.Name + "\n"
-			result += unmarshalleddata.Author + "\n"
-			result += fmt.Sprint(unmarshalleddata.Difficulty) + "\n"
-		} else {
-			break
+	
+	for rows.Next() {
+		var id int64
+		var data string
+		var unmarshalleddata Data
+		err = rows.Scan(&id, &data)
+		if err != nil {
+			continue
 		}
+		if !json.Valid([]byte(data)) {
+			continue
+		}
+		err = json.Unmarshal([]byte(data), &unmarshalleddata)
+		if err != nil {
+			continue
+		}
+	
+		result += fmt.Sprint(id) + "\n"
+		result += unmarshalleddata.Name + "\n"
+		result += unmarshalleddata.Author + "\n"
+		result += fmt.Sprint(unmarshalleddata.Difficulty) + "\n"
 	}
 	w.Write([]byte(result))
 }
@@ -201,12 +158,12 @@ func getRecents(w http.ResponseWriter, r *http.Request) {
 func main() {
 	//# Database using sqlite3
 	check(dberr, "loading database")
-	InitTable, err := database.Prepare("CREATE TABLE IF NOT EXISTS levels(id integer primary key autoincrement, data blob unique)")
+	InitTable, err := database.Prepare("CREATE TABLE IF NOT EXISTS levels(id INTEGER PRIMARY KEY, data BLOB UNIQUE)")
 	check(err, "creating levels' table")
 	err = nil
 	InitTable.Exec()
 	LID = QLID()
-	defer database.close()
+	defer database.Close()
 
 	//# Routing
 	http.HandleFunc("/", hewo)
