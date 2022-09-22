@@ -25,31 +25,15 @@ type Data struct {
 	CameraData    []int
 }
 
-var LID int64
-
 func check(err error, where string) bool {
 	if err != nil {
-                log.Fatal(where + ": ", err)
+    log.Fatal(where + ": ", err)
 		return false
-        }
+  }
 	return true
 }
 
 var database, dberr = sql.Open("sqlite3", "./levels.db")
-
-func QLID() int64 {
-	rows, err := database.Query("SELECT id FROM levels")
-	check(err, "querying ids")
-	err = nil
-	var lid int64
-	for rows.Next() {
-		err = rows.Scan(&lid)
-		check(err, "scanning id")
-		err = nil
-	}
-
-	return lid
-}
 
 func hewo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
@@ -75,7 +59,7 @@ func getLevel(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	var data string
-	row := database.QueryRow("SELECT data FROM levels WHERE id = " + r.Form["id"][0])
+	row := database.QueryRow("SELECT data FROM levels WHERE ROWID = " + r.Form["id"][0])
 	row.Scan(&data)
 	w.Write([]byte(data))
 }
@@ -109,7 +93,8 @@ func postLevel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = nil
-	_, err = database.Exec("INSERT INTO levels VALUES(?, ?)", LID+1, r.Form["data"][0])
+	var Iid int64
+	_, err = database.Exec("INSERT INTO levels VALUES(?)", r.Form["data"][0])
 	if err != nil {
 		if err.Error() == "UNIQUE constraint failed: levels.data" {
 			w.WriteHeader(http.StatusBadRequest)
@@ -119,13 +104,14 @@ func postLevel(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// Kinda stable, if you get an error message, go report it as a bug... Please check the FAQ first. OFC check other issues and the schedule.md
-	LID++
-	w.Write([]byte(fmt.Sprint(LID)))
+	row := database.QueryRow("SELECT ROWID FROM levels ORDER BY DESC LIMIT 1")
+	row.Scan(&Iid)
+
+	w.Write([]byte(fmt.Sprint(Iid+1)))
 }
 
 func getRecents(w http.ResponseWriter, r *http.Request) {
-	rows, err := database.Query("SELECT * FROM levels ORDER BY id DESC LIMIT 20") // Specify the amount of recents you want to see
+	rows, err := database.Query("SELECT data,ROWID FROM levels ORDER BY ROWID DESC LIMIT 20") // Specify the amount of recents you want to see
 	check(err, "quering recent levels")
 	err = nil
 
@@ -135,7 +121,7 @@ func getRecents(w http.ResponseWriter, r *http.Request) {
 		var id int64
 		var data string
 		var unmarshalleddata Data
-		err = rows.Scan(&id, &data)
+		err = rows.Scan(&data, &id)
 		if err != nil {
 			continue
 		}
@@ -158,11 +144,10 @@ func getRecents(w http.ResponseWriter, r *http.Request) {
 func main() {
 	//# Database using sqlite3
 	check(dberr, "loading database")
-	InitTable, err := database.Prepare("CREATE TABLE IF NOT EXISTS levels(id INTEGER PRIMARY KEY, data BLOB UNIQUE)")
+	InitTable, err := database.Prepare("CREATE TABLE IF NOT EXISTS levels(data BLOB UNIQUE)")
 	check(err, "creating levels' table")
 	err = nil
 	InitTable.Exec()
-	LID = QLID()
 	defer database.Close()
 
 	//# Routing
@@ -173,7 +158,8 @@ func main() {
 
 	//# Listen And Serve
 	fmt.Println("Listening and serving...")
-	//HTTPS is protection against man in the middle attacks, which will never happen, unless your in a public network AND someone is TARGETTING YOU
+	//HTTPS is protection against man in the middle attacks, which will never happen, unless your in a public network AND someone is TARGETING YOU
+	//Although it doesn't work on unity's network thing sadly, and thats why it didn't work. If it ever does, please make an issue
 	//err = http.ListenAndServeTLS(":9991", "TLS.crt", "TLS.key", nil)
 	err = http.ListenAndServe(":9991", nil)
 	check(err, "listen n serving")
