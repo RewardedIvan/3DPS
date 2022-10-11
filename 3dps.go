@@ -27,9 +27,9 @@ type Data struct {
 
 func check(err error, where string) bool {
 	if err != nil {
-    log.Fatal(where + ": ", err)
+		log.Fatal(where+": ", err)
 		return false
-  }
+	}
 	return true
 }
 
@@ -51,13 +51,13 @@ func getLevel(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	
+
 	_, err := strconv.Atoi(r.Form["id"][0])
 	if recover() != nil || err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	
+
 	var data string
 	row := database.QueryRow("SELECT data FROM levels WHERE ROWID = " + r.Form["id"][0])
 	row.Scan(&data)
@@ -87,7 +87,7 @@ func postLevel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Shit gets checked for acutal valid data
-	if (len(UD.Name) > 24 || len(UD.Author) > 24 || UD.SongID > 21 || UD.Difficulty > 5 || UD.FloorID > 3 || UD.BackgroundID > 2 || len(UD.Name) == 0 || len(UD.Author) == 0 || UD.SongID < 0 || UD.Difficulty < 0 || UD.FloorID < 0 || UD.BackgroundID < 0) { 
+	if len(UD.Name) > 24 || len(UD.Author) > 24 || UD.SongID > 21 || UD.Difficulty > 5 || UD.FloorID > 3 || UD.BackgroundID > 2 || len(UD.Name) == 0 || len(UD.Author) == 0 || UD.SongID < 0 || UD.Difficulty < 0 || UD.FloorID < 0 || UD.BackgroundID < 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -107,7 +107,7 @@ func postLevel(w http.ResponseWriter, r *http.Request) {
 	row := database.QueryRow("SELECT ROWID FROM levels ORDER BY DESC LIMIT 1")
 	row.Scan(&Iid)
 
-	w.Write([]byte(fmt.Sprint(Iid+1)))
+	w.Write([]byte(fmt.Sprint(Iid + 1)))
 }
 
 func getRecents(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +116,7 @@ func getRecents(w http.ResponseWriter, r *http.Request) {
 	err = nil
 
 	var result string
-	
+
 	for rows.Next() {
 		var id int64
 		var data string
@@ -132,7 +132,7 @@ func getRecents(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
-	
+
 		result += fmt.Sprint(id) + "\n"
 		result += unmarshalleddata.Name + "\n"
 		result += unmarshalleddata.Author + "\n"
