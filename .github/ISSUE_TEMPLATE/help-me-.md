@@ -9,11 +9,19 @@ assignees: ''
 ---
 
 **What went wrong**
-The docker build failed with `Failed to connect to docker socket`
+e.g. The docker build failed with `Failed to connect to docker socket`
 
 **Steps to reproduce**
+e.g.:
 1. `docker build .`
 2. Get the error message
+
+**Additional context**
+e.g. Today I woke up with some eggs for a breakfest. Opened up my beast, and started gaming. Then I saw this somewhere on youtube, installed.........
+
+**Additional info**
+ - OS: [e.g. Windows 10 64 bit]
+ - Client: [e.g. 1.2, modified, custom]
 
 **I'm sure that**
 - [ ] I have checked the [FAQ](https://github.com/RewardedIvan/3DPS/wiki/FAQ)

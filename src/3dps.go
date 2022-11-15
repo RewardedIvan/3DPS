@@ -6,10 +6,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"flag"
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
+const SV = "1.3"
 
 type Data struct {
 	Name          string
@@ -25,15 +29,16 @@ type Data struct {
 	CameraData    []int
 }
 
-func check(err error, where string) bool {
+var database *sql.DB;
+
+func check(err error, where string, exit bool) {
 	if err != nil {
 		log.Fatal(where+": ", err)
-		return false
+		if exit == true {
+			os.Exit(1);
+		}
 	}
-	return true
 }
-
-var database, dberr = sql.Open("sqlite3", "./levels.db")
 
 func hewo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
@@ -87,12 +92,11 @@ func postLevel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Shit gets checked for acutal valid data
-	if len(UD.Name) > 24 || len(UD.Author) > 24 || UD.SongID > 21 || UD.Difficulty > 5 || UD.FloorID > 3 || UD.BackgroundID > 2 || len(UD.Name) == 0 || len(UD.Author) == 0 || UD.SongID < 0 || UD.Difficulty < 0 || UD.FloorID < 0 || UD.BackgroundID < 0 {
+	/*if len(UD.Name) > 24 || len(UD.Author) > 24 || UD.SongID > 21 || UD.Difficulty > 5 || UD.FloorID > 3 || UD.BackgroundID > 2 || len(UD.Name) == 0 || len(UD.Author) == 0 || UD.SongID < 0 || UD.Difficulty < 0 || UD.FloorID < 0 || UD.BackgroundID < 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	}
+	}*/
 
-	err = nil
 	var Iid int64
 	_, err = database.Exec("INSERT INTO levels VALUES(?)", r.Form["data"][0])
 	if err != nil {
@@ -104,16 +108,15 @@ func postLevel(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	row := database.QueryRow("SELECT ROWID FROM levels ORDER BY DESC LIMIT 1")
+	row := database.QueryRow("SELECT ROWID FROM levels ORDER BY ROWID DESC LIMIT 1")
 	row.Scan(&Iid)
 
-	w.Write([]byte(fmt.Sprint(Iid + 1)))
+	w.Write([]byte(fmt.Sprint(Iid)))
 }
 
 func getRecents(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.Query("SELECT data,ROWID FROM levels ORDER BY ROWID DESC LIMIT 20") // Specify the amount of recents you want to see
-	check(err, "quering recent levels")
-	err = nil
+	check(err, "quering recent levels", false)
 
 	var result string
 
@@ -142,13 +145,29 @@ func getRecents(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	//# Flags
+	flag.Func("version", "Displays the sv (server version) and exits. Please put a argument, go is angry", func(s string) error {
+		fmt.Printf("sv. %s\n", SV)
+		
+		os.Exit(0)
+		return nil // Unreachable code lmao
+	})
+
+	dbstr := flag.String("db", "./levels.db", "Database connection string/file")
+
+	flag.Parse()
+
 	//# Database using sqlite3
-	check(dberr, "loading database")
-	InitTable, err := database.Prepare("CREATE TABLE IF NOT EXISTS levels(data BLOB UNIQUE)")
-	check(err, "creating levels' table")
-	err = nil
-	InitTable.Exec()
+
+	var err error
+	database, err = sql.Open("sqlite3", *dbstr)
+	check(err, "loading database", true)
+	
+	_, err = database.Exec("CREATE TABLE IF NOT EXISTS levels(data BLOB UNIQUE)")
+	check(err, "creating levels table", true)
+	
 	defer database.Close()
+
 
 	//# Routing
 	http.HandleFunc("/", hewo)
@@ -159,8 +178,8 @@ func main() {
 	//# Listen And Serve
 	fmt.Println("Listening and serving...")
 	//HTTPS is protection against man in the middle attacks, which will never happen, unless your in a public network AND someone is TARGETING YOU
-	//Although it doesn't work on unity's network thing sadly, and thats why it didn't work. If it ever does, please make an issue
+	//Although it doesn't work on unity's network thing (curl and its libs are OSS) sadly, and thats why it didn't work.
 	//err = http.ListenAndServeTLS(":9991", "TLS.crt", "TLS.key", nil)
 	err = http.ListenAndServe(":9991", nil)
-	check(err, "listen n serving")
+	check(err, "listen n serving", true)
 }

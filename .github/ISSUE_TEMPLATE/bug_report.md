@@ -24,14 +24,14 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Server (please complete the following information):**
- - OS: [e.g. Linux]
- - Version [e.g. 1.2]
+ - OS: [examples: Ubuntu 22.04 amd64, Arch Linux 32, Debian Stable aarch64]
+ - Server Version (sv) can be found with -version: [e.g. latest - 1.3]
 
 **Additional context**
 Add any other context about the problem here.
 
 **I'm sure that**
-- [ ] I have checked the FAQ
-- [ ] No other issue, that has been closed has your bug or check the [schedule](https://github.com/RewardedIvan/3DPS/blob/master/schedule.md), or if there is a bug not scheduled, please like it so I can see it
-- [ ] There is no other solution
+- [ ] I have checked the [FAQ](https://github.com/RewardedIvan/3DPS/wiki/FAQ) and the [TODO](https://github.com/RewardedIvan/3DPS/wiki/TODO)
+- [ ] I am on the latest commit of the git repo.
+
 Again again, if your not sure your issue **will** be closed
