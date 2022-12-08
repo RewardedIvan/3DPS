@@ -92,10 +92,10 @@ func postLevel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Shit gets checked for acutal valid data
-	/*if len(UD.Name) > 24 || len(UD.Author) > 24 || UD.SongID > 21 || UD.Difficulty > 5 || UD.FloorID > 3 || UD.BackgroundID > 2 || len(UD.Name) == 0 || len(UD.Author) == 0 || UD.SongID < 0 || UD.Difficulty < 0 || UD.FloorID < 0 || UD.BackgroundID < 0 {
+	if len(UD.Name) > 24 || len(UD.Author) > 24 || UD.SongID > 21 || UD.Difficulty > 5 || UD.FloorID > 3 || UD.BackgroundID > 2 || len(UD.Name) == 0 || len(UD.Author) == 0 || UD.SongID < 0 || UD.Difficulty < 0 || UD.FloorID < 0 || UD.BackgroundID < 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	}*/
+	}
 
 	var Iid int64
 	_, err = database.Exec("INSERT INTO levels VALUES(?)", r.Form["data"][0])

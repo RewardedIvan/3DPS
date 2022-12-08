@@ -43,8 +43,8 @@ func main() {
 	c := http.Client{};
 
 	// Comments help you figure out what its testing
-	frmt("postLevel(c, 'Impossible title and description')", postLevel(c, "./lvl.json")) // valid data
-	frmt("postLevel(c, 'Same but with a little change')", postLevel(c, "./lvl2.json")) // spam detection
+	frmt("postLevel(c, 'Impossible title and description')", !postLevel(c, "./lvl.json")) // valid data
+	frmt("postLevel(c, 'Same but with a little change')", !postLevel(c, "./lvl2.json")) // spam detection
 	frmt("postLevel(c, 'Valid Level')", postLevel(c, "./lvl3.json")) // valid data
 	frmt("getRecents(c)", getRecents(c)) // if the levels have been created and if it sends valid data
 }
@@ -127,13 +127,13 @@ func postLevel(c http.Client, fstr string) bool {
 	
 	check(err, "couldn't do request to post a level", false);
 	if err != nil { return false }
-	if res.StatusCode != 200 { fmt.Println("\033[31mfailed: status code != 200\033[0m"); return false; }
+	if res.StatusCode != 200 { fmt.Println("\033[31mfailed to publish: status code != 200\033[0m"); return false; }
 
 	bb, err := io.ReadAll(res.Body);
 	
 	check(err, "reading the body", false);
 	if err != nil { return false }
-	if bb == nil { fmt.Println("\033[31mfailed: body is nil\033[0m"); return false; }
+	if bb == nil { fmt.Println("\033[31mfailed to publish: body is nil\033[0m"); return false; }
 
 	fmt.Printf("ID: %s\n", string(bb));
 
